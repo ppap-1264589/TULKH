@@ -103,7 +103,6 @@ Có sự trợ giúp rất nhiều của ChatGPT, Claude, Grok và Google Studio
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/8ba8b1a6-029f-4c7b-b57d-1ddfdf786fc3" width="120"/>
-  <img src="https://github.com/user-attachments/assets/db9a4392-1d57-4046-addb-4476499761ec" width="120"/>
+  <img src="https://github.com/user-attachments/assets/44f99846-362a-42f6-a644-d670da0f3de5" width="120"/>
 </p>
-
 
