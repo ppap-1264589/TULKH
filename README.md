@@ -42,7 +42,7 @@ Các thông số lần lượt hiện trong mỗi bản ghi của file viz.txt:
 | attend | Số sinh viên tham dự lớp |
 | capacity | Sức chứa của phòng học |
 
-- Bước 4: Chạy file visualize.py để thấy được biểu đồ minh họa cho phương án tìm được
+- Bước 5: Chạy file visualize.py để thấy được biểu đồ minh họa cho phương án tìm được
   
   Hoặc dùng lệnh trong terminal:
 
@@ -60,6 +60,22 @@ Testcase n = 50
 Testcase n = 1000
 <img width="2685" height="8756" alt="schedule_viz" src="https://github.com/user-attachments/assets/0c045d17-e7d1-416e-905b-0569d105793c" />
 
+
+# Hướng dẫn cách chỉnh tham số về thời gian
+
+Quan phân tích, thời gian dùng cho time_solver luôn nhiều hơn thời gian dùng cho room_solver một lượng đáng kể. Chúng ta có thể phân bố lại thời gian của mỗi solver:
+
+```python
+def solve_time_model():
+  #...
+  time_solver.parameters.max_time_in_seconds = 60 # Đặt lại thành 60s
+  #...
+
+def solve_room_model():
+  #...
+  room_solver.parameters.max_time_in_seconds = 5 # room_solver thường chiếm ít thời gian hơn đáng kể
+  #...
+```
 
 
 # Lịch sử phát triển mã nguồn
