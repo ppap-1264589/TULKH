@@ -92,7 +92,7 @@ def solve_room_model():
 [Google Docs](https://docs.google.com/document/d/18w3Dw3dqrWhsUHAf8Mz9rPZ1g4F-q0VhMoY1ULBX-S4/edit?usp=sharing)
 
 # Acknowledgements
-Có sự trợ giúp rất nhiều của ChatGPT, Claude, Grok và Google Studio AI Code
+Có sự trợ giúp rất nhiều của ChatGPT, Claude, Grok và Google AI Studio
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/32040bce-7dfb-413e-8c31-1a536ed333f7" width="120"/>
