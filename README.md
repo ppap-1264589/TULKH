@@ -3,11 +3,9 @@ Mini Project about Timetabling Problem - Lời giải tạm thời của Hoàng
 
 # Hướng dẫn cách sử dụng
 
-- Bước 0: Tạo một folder mới trên máy của bạn (Chả hạn, đặt tên nó là **MiniProject_HoangSolution**)
-
-- Bước 1: Download toàn bộ source code này đặt vào folder đó
+- Bước 1: Download toàn bộ source code
   
-  Hoặc dùng lệnh trong terminal tại folder đã tạo:
+  Hoặc dùng lệnh trong terminal:
 
   ```bash
   git clone https://github.com/ppap-1264589/TULKH.git
