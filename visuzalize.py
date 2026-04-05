@@ -112,8 +112,8 @@ def visualize_schedule(df, figsize=None):
         for yc in y_centers:
             ax.axhline(yc, color='#E8E6DF', linewidth=0.4, zorder=0)
 
-        ax.text(HALF / 2, -ROW_H * 0.42, 'AM', ha='center', va='center', fontsize=7, color='#888780')
-        ax.text(HALF + HALF / 2, -ROW_H * 0.42, 'PM', ha='center', va='center', fontsize=7, color='#888780')
+        ax.text(HALF / 2, -ROW_H * 0.47, 'AM', ha='center', va='center', fontsize=7, color='#888780')
+        ax.text(HALF + HALF / 2, -ROW_H * 0.47, 'PM', ha='center', va='center', fontsize=7, color='#888780')
 
         ax.set_xticks([x + 0.5 for x in range(SLOTS_PER_DAY)])
         ax.set_xticklabels([str(x + 1) for x in range(SLOTS_PER_DAY)], fontsize=7)
