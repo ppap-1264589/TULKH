@@ -5,13 +5,15 @@ Mini Project about Timetabling Problem - Lời giải tạm thời của Hoàng
 
 - Bước 1: Download toàn bộ source code
   
-  Hoặc dùng lệnh trong terminal:
+  Hoặc dùng lệnh trong terminal để tạo một folder tên là "TULKH" tại vị trí bạn gõ lệnh
 
   ```bash
   git clone https://github.com/ppap-1264589/TULKH.git
   ```
 
-- Bước 2: Chạy file solution2_log_refactor.py
+- Bước 2: Nhập dữ liệu cho file input.txt giống như đề bài đã mô tả
+
+- Bước 3: Chạy file solution2_log_refactor.py để tìm lời giải cho input
 
   Hoặc dùng lệnh trong terminal:
 
@@ -19,7 +21,7 @@ Mini Project about Timetabling Problem - Lời giải tạm thời của Hoàng
   python solution2_log_refactor.py
   ```
 
-- Bước 3: Trong folder sẽ tự động hiện các file
+- Bước 4: Trong folder sẽ tự động hiện các file
 
 | Tên file | Ý nghĩa |
 | -------- | -------- |
@@ -40,7 +42,7 @@ Các thông số lần lượt hiện trong mỗi bản ghi của file viz.txt:
 | attend | Số sinh viên tham dự lớp |
 | capacity | Sức chứa của phòng học |
 
-- Bước 4: Chạy file visualize.py để thấy được biểu đồ
+- Bước 4: Chạy file visualize.py để thấy được biểu đồ minh họa cho phương án tìm được
   
   Hoặc dùng lệnh trong terminal:
 
