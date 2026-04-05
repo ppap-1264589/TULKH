@@ -64,7 +64,7 @@ Testcase n = 1000
 
 # Lịch sử phát triển mã nguồn
 | Phiên bản | File | Ý nghĩa |
-| --------- | ---- | ------- |
+| :---------: | :----: | ------- |
 | 1 | solution1.py | Đây là phiên bản đầu tiên, sơ khai nhất, mô hình hóa bằng boolean để tạo ràng buộc non_overlap giữa các lớp của cùng một giáo viên và các lớp trong cùng một phòng. Nhược điểm là chạy rất chậm trên bộ test có n = 1000 |
 | 2 | solution2.py | Cố gắng cải tiến từ phiên bản thứ nhất bằng cách tách ra hai pha: Tối ưu về thời gian trước, rồi gán thỏa mãn cho không gian sau. Lời giải đã được cải thiện đáng kể đối với bộ dữ liệu n = 1000. Tuy nhiên với các testcase mà lịch có thể xếp vừa kín trong một tuần, solver sẽ rất khó để verify phương án tối ưu. Thường chỉ đưa ra được một phương án FEASIBLE khá tốt |
 | 3 | solution2_log.py | Phiên bản ra đời với mong muốn in ra cả log của solver trong khi chạy. Vẫn giữ tư tưởng chia thành 2 pha từ phiên bản 2. Code được viết theo kiểu tuần tự, có gì viết đó |
