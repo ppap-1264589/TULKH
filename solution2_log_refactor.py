@@ -277,7 +277,7 @@ def make_limited_overlapping_classes():
         # Cumulative constraint: 
         # độ đè lịch của các lớp có cùng threshold <= số phòng hợp lệ
         # Constraint chỉ có ý nghĩa khi 
-        # số lớp tranh chấp tài nguyên >= độ đè lịch khả thi
+        # số lớp tranh chấp tài nguyên >= độ đè lịch tối đa
         if classes_demanding_this_tier and len_this_tier >= num_rooms_available:
             time_model.add_cumulative(
                 classes_demanding_this_tier,
