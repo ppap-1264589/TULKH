@@ -200,16 +200,13 @@ def make_non_overlapping_half_day_and_end_day():
       - Thêm biến is_present[i] (optional): lớp i có được xếp?
     """
     global start, is_present, intervals
-    
     for cur_class in range(n):
+        # Tìm các khoảng hợp lệ của một lớp
         valid_intervals = []
-        
-        # Lớp chỉ hợp lệ nếu duration không quá nửa ngày
-        if duration[cur_class] <= half_day_time:
-            for s in range(len(start_half)):
-                valid_intervals.append([
-                    start_half[s], end_half[s] - duration[cur_class] + 1
-                ])
+        for s in range(len(start_half)):
+            valid_intervals.append([
+                start_half[s], end_half[s] - duration[cur_class] + 1
+            ])
 
         # Tạo biến start[cur_class] với domain là các khoảng hợp lệ
         domain = cp_model.Domain.from_intervals(valid_intervals)
@@ -222,6 +219,24 @@ def make_non_overlapping_half_day_and_end_day():
         intervals.append(time_model.new_optional_fixed_size_interval_var(
             start[-1], duration[cur_class], is_present[-1], f"interval_{cur_class+1}"
         ))
+
+
+
+def enforce_valid_solution():
+    """
+    Kiểm tra điều kiện biên:
+      - Có lớp nào có số sinh viên tham dự vượt quá max_capacity không?
+      - Có lớp nào dài quá nửa ngày không?
+
+    Logic:
+      - Cho is_present[i] == 0 nếu lớp i vi phạm điều kiện
+    """
+    max_capacity = max(capacity)
+    for i in range(n):
+        if (attend[i] > max_capacity): 
+            time_model.add(is_present[i] == 0)
+        if (duration[i] > half_day_time): 
+            time_model.add(is_present[i] == 0)
 
 
 def make_non_overlapping_classes_by_teacher():
@@ -246,45 +261,47 @@ def make_non_overlapping_classes_by_teacher():
 
 def make_limited_overlapping_classes():
     """
-    Ràng buộc 3: Sức chứa phòng (Cumulative Constraint).
+    Ràng buộc 3: Sức chứa phòng theo phân khúc (Cumulative Constraint).
     
     Logic:
-      - Các lớp có cùng "sĩ số threshold" cần phòng có sức chứa >= threshold
-      - Đếm số phòng hợp lệ cho mỗi threshold
-      - Đảm bảo "độ đè lịch" (overlapping degree) không vượt số phòng
+      - Tạo các segments dựa trên sức chứa của các phòng
+      - Xét từng phân khúc (tier) giữa previous_cap và current_cap:
+        1. Đếm tổng số phòng có sức chứa >= current_cap.
+        2. Tìm các lớp tranh chấp phòng có sức chứa từ mức current_cap trở lên: 
+          - Chính là các lớp có sĩ số > previous_cap 
+        3. Đảm bảo "độ đè lịch" (overlapping degree) của nhóm lớp tranh chấp 
+        không vượt quá số phòng đáp ứng được.
       
-    Ví dụ:
-      - Lớp A: 40 sinh viên → có 25 phòng capacity >= 40
-      - Lớp B: 40 sinh viên → có 25 phòng capacity >= 40
-      - Lớp C:...
-      - Giới hạn: tối đa 25 lớp như lớp A,B,C (với sĩ số >= 40) có thể xếp trùng giờ
-
     Mục đích:
-      - Tách biệt phase thời gian với phase gán phòng
+      - Cho phép đè lịch lẫn nhau nhưng chỉ được ở một mức nhất định.
+      - Tách biệt phase gán thời gian với phase gán phòng, tăng hiệu năng
     """
-    unique_attend_thresholds = list(set(attend))
-    demands = [1] * n
-    for attend_threshold in unique_attend_thresholds:
-        # Đếm số phòng đủ sức chứa cho threshold này
-        num_rooms_available = sum(1 for c in capacity if c >= attend_threshold)
-        
-        # Danh sách lớp có sĩ số >= threshold
-        classes_demanding_this_tier = [
-            intervals[i] for i in range(n) if attend[i] >= attend_threshold
+    
+    segment_capacities = sorted(set(capacity))
+    segment_capacities.insert(0, 0)
+
+    for c in range(1, len(segment_capacities)):
+        previous_cap = segment_capacities[c - 1]
+        current_cap  = segment_capacities[c]
+
+        # Số phòng có thể chứa lớp ở tier này (sức chứa >= mức hiện tại)
+        num_rooms_available = sum(1 for cap in capacity if cap >= current_cap)
+
+        # Lớp có sĩ số buộc phải dùng phòng >= current_cap (tức sĩ số > mức trước đó)
+        classes_fighting = [
+            intervals[i] for i in range(n)
+            if attend[i] > previous_cap
         ]
-        len_this_tier = len(classes_demanding_this_tier)
-        
-        # Cumulative constraint: 
-        # độ đè lịch của các lớp có cùng threshold <= số phòng hợp lệ
-        # Constraint chỉ có ý nghĩa khi 
-        # số lớp tranh chấp tài nguyên >= độ đè lịch tối đa
-        if classes_demanding_this_tier and len_this_tier >= num_rooms_available:
+        len_this_tier = len(classes_fighting)
+
+        # Constraint chỉ áp dụng khi số lớp tranh chấp lớn hơn số phòng và có phòng thực tế
+        if len_this_tier >= num_rooms_available and num_rooms_available != 0:
             time_model.add_cumulative(
-                classes_demanding_this_tier,
-                demands[:len_this_tier],
+                classes_fighting,
+                [1] * len_this_tier,
                 num_rooms_available
             )
-
+                   
 
 def define_objective():
     """
@@ -309,6 +326,12 @@ def solve_time_model():
     time_solver.parameters.log_search_progress = True
     time_solver.parameters.log_to_stdout = False
     time_solver.log_callback = time_log_to_file
+
+    # Setup gap
+    # Chấp nhận hàm mục tiêu tìm được 
+    # nằm trong mức sai lệch 10% so với best_bound 
+    time_solver.parameters.relative_gap_limit = 0.05
+
 
     # Giải
     status = time_solver.solve(time_model)
@@ -474,6 +497,7 @@ def main():
     # --- Bước 3: Phase 1 - TIME SCHEDULING ---
     define_time_model()
     make_non_overlapping_half_day_and_end_day()
+    enforce_valid_solution()
     make_non_overlapping_classes_by_teacher()
     make_limited_overlapping_classes()
     define_objective()
