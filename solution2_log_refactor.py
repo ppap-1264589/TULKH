@@ -262,8 +262,8 @@ def make_limited_overlapping_classes():
     Mục đích:
       - Tách biệt phase thời gian với phase gán phòng
     """
-    unique_attend_thresholds = sorted(list(set(attend)))
-    
+    unique_attend_thresholds = list(set(attend))
+    demands = [1] * n
     for attend_threshold in unique_attend_thresholds:
         # Đếm số phòng đủ sức chứa cho threshold này
         num_rooms_available = sum(1 for c in capacity if c >= attend_threshold)
@@ -272,13 +272,16 @@ def make_limited_overlapping_classes():
         classes_demanding_this_tier = [
             intervals[i] for i in range(n) if attend[i] >= attend_threshold
         ]
+        len_this_tier = len(classes_demanding_this_tier)
         
         # Cumulative constraint: 
         # độ đè lịch của các lớp có cùng threshold <= số phòng hợp lệ
-        if classes_demanding_this_tier:
+        # Constraint chỉ có ý nghĩa khi 
+        # số lớp tranh chấp tài nguyên >= độ đè lịch khả thi
+        if classes_demanding_this_tier and len_this_tier >= num_rooms_available:
             time_model.add_cumulative(
                 classes_demanding_this_tier,
-                [1] * len(classes_demanding_this_tier),
+                demands[:len_this_tier],
                 num_rooms_available
             )
 
