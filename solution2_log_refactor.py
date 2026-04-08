@@ -19,6 +19,11 @@ PROBLEM STATEMENT:
   4. Phòng đủ sức chứa cho lớp
   5. Tối đa hóa số lớp được xếp
 
+LIMIT:
+  - Lớp nào cũng tồn tại ít nhất một phòng đủ chỗ để gán
+  - Không có lớp nào lại dài hơn cả thời lượng của nửa ngày
+  - Tất cả các lớp chỉ có 1, 2, 3 hoặc 4 tiết
+
 APPROACH:
   Two-phase CP-SAT solving:
   - Phase 1 (Time Model): Xếp thời gian hợp lệ, tối đa hóa số lớp
@@ -50,6 +55,7 @@ num_day = 5                         # Số ngày trong tuần
 num_half_day = num_day * 2          # Tổng nửa ngày (10 nửa)
 day_time = 12                       # Thời gian 1 ngày
 half_day_time = int(day_time / 2)   # Thời gian 1 nửa ngày = 6
+max_duration = 4                    # Một lớp dài cùng lắm là 4 tiết
 
 # Khoảng thời gian cho nửa ngày i
 # start_half[i] = thời gian bắt đầu nửa thứ i
@@ -77,7 +83,7 @@ intervals = []      # intervals[i] = khoảng thời gian của lớp i
 room_model = None        # CP-SAT model cho phase 2
 room_var = []            # room_var[i] = phòng được gán cho scheduled_classes[i]
 scheduled_classes = []   # Danh sách lớp đã được xếp thời gian (từ phase 1)
-Q = 0                    # Số lớp thực sự được xếp (tính sau phase 1)
+Q = 0                    # Số lớp thực sự được xếp (từ phase 1)
 
 
 # ╔══════════════════════════════════════════════════════════════════════════╗
@@ -189,27 +195,28 @@ def define_time_model():
     time_model = cp_model.CpModel()
 
 
-def make_non_overlapping_half_day_and_end_day():
+def make_non_crossing_half_day_and_end_day():
     """
     Ràng buộc 1: Lớp không được dài đè lên nửa ngày hoặc cuối ngày.
     
     Logic:
       - Mỗi lớp chỉ được bắt đầu tại các vị trí trong nửa ngày
-      - Nếu duration[i] <= half_day_time, có thể fit vào 1 nửa ngày
       - Tạo domain chứa các khoảng thời gian hợp lệ
       - Thêm biến is_present[i] (optional): lớp i có được xếp?
     """
     global start, is_present, intervals
-    for cur_class in range(n):
-        # Tìm các khoảng hợp lệ của một lớp
-        valid_intervals = []
+    valid_domain_of_duration = {key: [] for key in range(1, max_duration+1)}
+
+    # Tìm các khoảng hợp lệ của một lớp có duration là dur
+    for dur in range(1, max_duration+1):
         for s in range(len(start_half)):
-            valid_intervals.append([
-                start_half[s], end_half[s] - duration[cur_class] + 1
+            valid_domain_of_duration[dur].append([
+                start_half[s], end_half[s] - dur + 1
             ])
 
+    for cur_class in range(n):
         # Tạo biến start[cur_class] với domain là các khoảng hợp lệ
-        domain = cp_model.Domain.from_intervals(valid_intervals)
+        domain = cp_model.Domain.from_intervals(valid_domain_of_duration[duration[cur_class]])
         start.append(time_model.new_int_var_from_domain(domain, f"start_{cur_class+1}"))
         
         # Biến is_present: 1 nếu lớp được xếp, 0 nếu không
@@ -219,24 +226,6 @@ def make_non_overlapping_half_day_and_end_day():
         intervals.append(time_model.new_optional_fixed_size_interval_var(
             start[-1], duration[cur_class], is_present[-1], f"interval_{cur_class+1}"
         ))
-
-
-
-def enforce_valid_solution():
-    """
-    Kiểm tra điều kiện biên:
-      - Có lớp nào có số sinh viên tham dự vượt quá max_capacity không?
-      - Có lớp nào dài quá nửa ngày không?
-
-    Logic:
-      - Cho is_present[i] == 0 nếu lớp i vi phạm điều kiện
-    """
-    max_capacity = max(capacity)
-    for i in range(n):
-        if (attend[i] > max_capacity): 
-            time_model.add(is_present[i] == 0)
-        if (duration[i] > half_day_time): 
-            time_model.add(is_present[i] == 0)
 
 
 def make_non_overlapping_classes_by_teacher():
@@ -295,14 +284,14 @@ def make_limited_overlapping_classes():
         len_this_tier = len(classes_fighting)
 
         # Constraint chỉ áp dụng khi số lớp tranh chấp lớn hơn số phòng và có phòng thực tế
-        if len_this_tier >= num_rooms_available and num_rooms_available != 0:
+        if len_this_tier > num_rooms_available:
             time_model.add_cumulative(
                 classes_fighting,
                 [1] * len_this_tier,
                 num_rooms_available
             )
-                   
-
+            
+                  
 def define_objective():
     """
     Hàm mục tiêu cho phase 1: Tối đa hóa số lớp được xếp.
@@ -329,8 +318,8 @@ def solve_time_model():
 
     # Setup gap
     # Chấp nhận hàm mục tiêu tìm được 
-    # nằm trong mức sai lệch 10% so với best_bound 
-    time_solver.parameters.relative_gap_limit = 0.05
+    # nằm trong mức sai lệch 5% so với best_bound 
+    # time_solver.parameters.relative_gap_limit = 0.05
 
 
     # Giải
@@ -404,6 +393,7 @@ def make_non_overloaded_room():
                 [[r] for r in valid_rooms]
             )
         else:
+            print("NO ROOM AVALID?")
             # Nếu không tìm thấy phòng hợp lệ thì skip 
             # (trường hợp này không nên xảy ra)
             continue
@@ -496,10 +486,9 @@ def main():
 
     # --- Bước 3: Phase 1 - TIME SCHEDULING ---
     define_time_model()
-    make_non_overlapping_half_day_and_end_day()
-    enforce_valid_solution()
+    make_non_crossing_half_day_and_end_day()
     make_non_overlapping_classes_by_teacher()
-    make_limited_overlapping_classes()
+    # make_limited_overlapping_classes()
     define_objective()
     time_solver, time_status = solve_time_model()
     if time_status not in [cp_model.OPTIMAL, cp_model.FEASIBLE]: return
