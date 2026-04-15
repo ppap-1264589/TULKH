@@ -16,13 +16,18 @@ PROBLEM STATEMENT:
   1. Tổng thời lượng trong một tuần gồm 5 ngày (tổng cộng 5*12 = 60 tiết)
   2. Một lớp không được dài vượt quá nửa hoặc cuối ngày
   3. Một giáo viên không dạy trùng tkb
-  4. Phòng đủ sức chứa cho lớp
-  5. Tối đa hóa số lớp được xếp
+  4. Một phòng không có các lớp dạy đè lịch lên nhau
+  5. Phòng đủ sức chứa cho lớp
+  6. Tối đa hóa số lớp được xếp
 
 LIMIT:
-  - Lớp nào cũng tồn tại ít nhất một phòng đủ chỗ để gán
+  - Không có lớp nào đông sinh viên hơn cả phòng lớn nhất
   - Không có lớp nào lại dài hơn cả thời lượng của nửa ngày
   - Tất cả các lớp chỉ có 1, 2, 3 hoặc 4 tiết
+  - Tất cả các lớp có sĩ số trong khoảng 1-200
+  - Tất cả các phòng có sức chứa trong khoảng 1-300
+  - Tổng số lớp tối đa là 1000
+  - Tổng số phòng tối đa 50
 
 APPROACH:
   Two-phase CP-SAT solving:
@@ -32,6 +37,32 @@ APPROACH:
 INPUT/OUTPUT:
   Input:  input.txt (n, m, d[i], g[i], s[i], c[j])
   Output: output.txt (class_id start_time room_id for each scheduled_class)
+
+EXAMPLE:
+Input
+10 2
+4 1 15
+4 1 18
+4 1 15
+2 2 18
+4 2 11
+3 1 15
+2 2 27
+3 2 18
+4 1 13
+3 1 10
+20 20 
+Output
+9
+1 1 1
+2 1 2
+3 7 1
+4 5 1
+5 7 2
+6 13 1
+8 13 2
+9 19 1
+10 16 1
 """
 
 from ortools.sat.python import cp_model
@@ -296,6 +327,7 @@ def define_objective():
     """
     Hàm mục tiêu cho phase 1: Tối đa hóa số lớp được xếp.
     """
+    time_model.add(cp_model.LinearExpr.weighted_sum(is_present, duration) <= num_day*day_time*m)
     time_model.maximize(cp_model.LinearExpr.sum(is_present))
 
 
@@ -319,8 +351,7 @@ def solve_time_model():
     # Setup gap
     # Chấp nhận hàm mục tiêu tìm được 
     # nằm trong mức sai lệch 5% so với best_bound 
-    # time_solver.parameters.relative_gap_limit = 0.05
-
+    time_solver.parameters.relative_gap_limit = 0.05
 
     # Giải
     status = time_solver.solve(time_model)
@@ -488,7 +519,7 @@ def main():
     define_time_model()
     make_non_crossing_half_day_and_end_day()
     make_non_overlapping_classes_by_teacher()
-    # make_limited_overlapping_classes()
+    make_limited_overlapping_classes()
     define_objective()
     time_solver, time_status = solve_time_model()
     if time_status not in [cp_model.OPTIMAL, cp_model.FEASIBLE]: return
