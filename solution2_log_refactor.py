@@ -350,8 +350,8 @@ def solve_time_model():
 
     # Setup gap
     # Chấp nhận hàm mục tiêu tìm được 
-    # nằm trong mức sai lệch 5% so với best_bound 
-    time_solver.parameters.relative_gap_limit = 0.05
+    # nằm trong mức sai lệch 10% so với best_bound 
+    time_solver.parameters.relative_gap_limit = 0.1
 
     # Giải
     status = time_solver.solve(time_model)
